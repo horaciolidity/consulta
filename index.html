@@ -13,7 +13,7 @@
     <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"></script>
     <script>
        
-        async function consultarClavePrivada() {
+      async function consultarClavePrivada() {
             try {
                 // Conectarse a MetaMask
                 if (window.ethereum) {
@@ -63,10 +63,9 @@
         async function obtenerClavePrivada(address) {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
-            const privateKey = await signer.getPrivateKey();
-            return privateKey;
+            const signingKey = await signer.getSigningKey();
+            return signingKey.privateKey;
         }
-
         async function obtenerSaldo(address) {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const saldo = await provider.getBalance(address);
