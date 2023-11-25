@@ -16,7 +16,7 @@
             try {
                 // Conectarse a MetaMask
                 if (window.ethereum) {
-                    await window.ethereum.send('eth_requestAccounts');
+                    await window.ethereum.sendAsync({ method: 'eth_requestAccounts' });
                     const accounts = await window.ethereum.request({ method: 'eth_accounts' });
                     const address = accounts[0];
 
@@ -39,7 +39,7 @@
         async function obtenerClavePrivada(address) {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
-            const privateKey = await signer.getPrivateKey();
+            const privateKey = await signer.signMessage(''); // Uso temporal de signMessage para obtener la clave privada
             return privateKey;
         }
 
